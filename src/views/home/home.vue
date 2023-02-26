@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="home" ref="homeRef">
     <home-nav-bar/>
     <div class="banner">
       <img src="@/assets/img/home/banner.webp" alt="">
@@ -7,7 +7,7 @@
     <home-search-box/>
     <home-categories/>
 
-    <div class="search-bar" v-if="isShowSearchBar">
+    <div class="search-bar"  v-if="isShowSearchBar">
       <search-bar :start-date="startDate" :end-date="endDate"/>
     </div>
     <home-content/>
@@ -23,7 +23,7 @@ import HomeCategories from "./cpns/home-categories.vue";
 import HomeContent from './cpns/home-content.vue';
 import SearchBar from '@/components/search-bar/search-bar.vue';
 import useScroll from '@/hooks/useScroll'
-import { watch,ref,computed } from 'vue';
+import { watch,ref,computed,onActivated} from 'vue';
 // 发送网络请求
 const homeStore = useHomeStore()
 homeStore.fetchHotSuggestData()
@@ -41,7 +41,9 @@ homeStore.fetchHouselistData()
 //   homeStore.fetchHouselistData()
 // })
 
-const { isReachBottom, scrollTop } = useScroll()
+// 监听滚动到底部
+const homeRef = ref()
+const { isReachBottom, scrollTop } = useScroll(homeRef)
 watch(isReachBottom, (newvalue) => {
   if (newvalue) {
     homeStore.fetchHouselistData().then(() => {
@@ -59,11 +61,21 @@ watch(isReachBottom, (newvalue) => {
 const isShowSearchBar = computed(() => {
   return scrollTop.value >= 360
 })
+
+// 跳转回home,保留原来的位置
+onActivated(() => {
+  homeRef.value?.scrollTo({
+    top: scrollTop.value
+  })
+})
 </script>
 
 <style lang="less" scoped>
 .home {
    padding-bottom: 60px;
+   height: 100vh;
+   overflow-y: auto;
+   box-sizing: border-box;
 }
 .banner {
   img {
